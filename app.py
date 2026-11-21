@@ -8,16 +8,16 @@ from ultralytics import YOLO
 
 st.set_page_config(page_title="Receipt OCR", layout="wide")
 st.title("Receipt Field Detection & OCR")
-st.write("Receipt image upload karein — YOLO fields detect karega aur EasyOCR text nikalega.")
+st.write("Upload a receipt image — YOLO will detect the fields and EasyOCR will extract the text.")
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR / "best.pt"  # agar kisi subfolder mein ho toh exact path dein
+MODEL_PATH = BASE_DIR / "best.pt"  # provide the exact path if it is in a subfolder
 
 @st.cache_resource
 def load_models():
     if not MODEL_PATH.exists():
         raise FileNotFoundError(
-            f"Model file '{MODEL_PATH}' nahi mili. Yakeen karein ke 'best.pt' repo mein mojood hai."
+            f"Model file '{MODEL_PATH}' was not found. Make sure 'best.pt' is present in the repository."
         )
     detector = YOLO(str(MODEL_PATH))
     reader = easyocr.Reader(["en"], gpu=False)
@@ -28,7 +28,7 @@ detector, reader = load_models()
 conf_thresh = st.sidebar.slider("Confidence Threshold", 0.1, 0.9, 0.30, 0.05)
 padding = st.sidebar.slider("Crop Padding (px)", 0, 15, 4, 1)
 
-uploaded_file = st.file_uploader("Receipt Image Upload Karein", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Upload Receipt Image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     pil_img = Image.open(uploaded_file).convert("RGB")
@@ -48,7 +48,7 @@ if uploaded_file is not None:
     cls_ids = results.boxes.cls.cpu().numpy().astype(int)
     confs = results.boxes.conf.cpu().numpy()
 
-    # Top-to-bottom order mein sort karein
+    # Sort detections from top to bottom
     order = np.argsort(boxes[:, 1]) if len(boxes) > 0 else []
 
     for idx in order:
@@ -75,4 +75,4 @@ if uploaded_file is not None:
         if extracted_rows:
             st.dataframe(extracted_rows, use_container_width=True)
         else:
-            st.info("Koi field detect nahi hua. Confidence threshold kam karke try karein.")
+            st.info("No fields detected. Try lowering the confidence threshold.")
