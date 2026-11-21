@@ -1,3 +1,4 @@
+from pathlib import Path
 import cv2
 import easyocr
 import numpy as np
@@ -9,12 +10,17 @@ st.set_page_config(page_title="Receipt OCR", layout="wide")
 st.title("Receipt Field Detection & OCR")
 st.write("Receipt image upload karein — YOLO fields detect karega aur EasyOCR text nikalega.")
 
-MODEL_PATH = "best.pt"  # agar kisi subfolder mein ho toh exact path dein
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "best.pt"  # agar kisi subfolder mein ho toh exact path dein
 
 @st.cache_resource
 def load_models():
-    detector = YOLO(MODEL_PATH)
-    reader = easyocr.Reader(["en"], gpu=True)
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(
+            f"Model file '{MODEL_PATH}' nahi mili. Yakeen karein ke 'best.pt' repo mein mojood hai."
+        )
+    detector = YOLO(str(MODEL_PATH))
+    reader = easyocr.Reader(["en"], gpu=False)
     return detector, reader
 
 detector, reader = load_models()
