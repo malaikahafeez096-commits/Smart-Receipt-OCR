@@ -6,9 +6,9 @@ from ultralytics import YOLO
 
 st.set_page_config(page_title="Receipt OCR", layout="wide")
 st.title("Receipt Field Detection & OCR")
-st.write("Receipt image upload karein — YOLO fields detect karega aur EasyOCR text nikalega.")
+st.write("Upload a receipt image — YOLO will detect the fields and EasyOCR will extract the text.")
 
-MODEL_PATH = "best.pt"  # agar kisi subfolder mein ho toh exact path dein
+MODEL_PATH = "best.pt"  # Provide the exact path if it is in a subfolder
 
 
 @st.cache_resource
@@ -21,10 +21,10 @@ def load_models(model_path: str):
 conf_thresh = st.sidebar.slider("Confidence Threshold", 0.1, 0.9, 0.30, 0.05)
 padding = st.sidebar.slider("Crop Padding (px)", 0, 15, 4, 1)
 
-uploaded_file = st.file_uploader("Receipt Image Upload Karein", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Upload Receipt Image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    with st.spinner("Models load ho rahe hain aur receipt process ho rahi hai..."):
+    with st.spinner("Loading models and processing receipt..."):
         detector, reader = load_models(MODEL_PATH)
 
         pil_img = Image.open(uploaded_file).convert("RGB")
@@ -45,7 +45,7 @@ if uploaded_file is not None:
         cls_ids = results.boxes.cls.cpu().numpy().astype(int)
         confs = results.boxes.conf.cpu().numpy()
 
-        # Top-to-bottom order mein sort karein
+        # Sort boxes in top-to-bottom order
         order = np.argsort(boxes[:, 1])
 
         for idx in order:
@@ -72,4 +72,4 @@ if uploaded_file is not None:
         if extracted_rows:
             st.dataframe(extracted_rows, use_container_width=True)
         else:
-            st.info("Koi field detect nahi hua. Confidence threshold kam karke try karein.")
+            st.info("No fields detected. Try lowering the confidence threshold.")
